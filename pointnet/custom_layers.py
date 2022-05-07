@@ -1,5 +1,4 @@
 import numpy as np
-import geometry
 from torchmeta.modules import (MetaModule, MetaSequential)
 from collections import OrderedDict
 
