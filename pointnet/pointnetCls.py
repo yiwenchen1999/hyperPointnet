@@ -25,19 +25,20 @@ class PointNetCls(nn.Module):
         self.latent_dim = 256
         self.feature_transform = feature_transform
         self.feat = model.PointNetfeat(global_feat=True, feature_transform=feature_transform)
-        self.phi = custom_layers.FCBlock(outputDim = k)
+        self.phi = PointnetHyper(outputDim = k)
        
         self.hyper_phi = hyperlayers.HyperNetwork(hyper_in_features=self.latent_dim,
                                                           hyper_hidden_layers=1,
                                                           hyper_hidden_features=self.latent_dim,
                                                           hypo_module=self.phi)
-        def forward(self, x, z):
-            x, trans, trans_feat = self.feat(x)
-            phi_weights = self.hyper_phi(z)
-            phi = lambda i: self.phi(i, params=phi_weights)
-            x = phi(x)
+     def forward(self, input, z):
+         x = input
+         x, trans, trans_feat = self.feat(x)
+         phi_weights = self.hyper_phi(z)
+         phi = lambda i: self.phi(i, params=phi_weights)
+         x = phi(x)
             
-            return F.log_softmax(x, dim=1), trans, trans_feat
+         return F.log_softmax(x, dim=1), trans, trans_feat
         
 class PointnetHyper(MetaModule):
     def __init__(self,
@@ -61,7 +62,8 @@ class PointnetHyper(MetaModule):
     
 if __name__ == '__main__':
     sim_data = Variable(torch.rand(32,3,2500))
+    z = Variable(torch.rand(256))
 
-    cls = PointNetCls(k = 5)
-    out, _, _ = cls(sim_data)
+    cls = PointNetCls(k = 2)
+    out, _, _ = cls(sim_data,z)
     print('class', out.size())
