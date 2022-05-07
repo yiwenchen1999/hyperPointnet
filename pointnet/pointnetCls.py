@@ -62,7 +62,7 @@ class PointnetHyper(MetaModule):
     
 if __name__ == '__main__':
     sim_data = Variable(torch.rand(32,3,2500))
-    z = Variable(torch.rand(256))
+    z = Variable(torch.rand(1, 256))
 
     cls = PointNetCls(k = 2)
     out, _, _ = cls(sim_data,z)
