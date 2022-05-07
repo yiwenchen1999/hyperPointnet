@@ -12,7 +12,6 @@ import numpy as np
 from torch.autograd import Variable
 
 import custom_layers
-import geometry
 import hyperlayers
 import model
 from torchmeta.modules import (MetaModule, MetaSequential)
