@@ -22,7 +22,7 @@ from collections import OrderedDict
 class PointNetCls(nn.Module):
     def __init__(self, k=2, feature_transform=False):
         super(PointNetCls, self).__init__()
-        self.latent_dim = 256
+        self.latent_dim = 384
         self.feature_transform = feature_transform
         self.feat = model.PointNetfeat(global_feat=True, feature_transform=feature_transform)
         self.phi = PointnetHyper(outputDim = k)
@@ -62,7 +62,7 @@ class PointnetHyper(MetaModule):
     
 if __name__ == '__main__':
     sim_data = Variable(torch.rand(32,3,2500))
-    z = Variable(torch.rand(1, 256))
+    z = Variable(torch.rand(1, 384))
 
     cls = PointNetCls(k = 2)
     out, _, _ = cls(sim_data,z)
