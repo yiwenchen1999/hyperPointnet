@@ -31,14 +31,14 @@ class PointNetCls(nn.Module):
                                                           hyper_hidden_layers=1,
                                                           hyper_hidden_features=self.latent_dim,
                                                           hypo_module=self.phi)
-     def forward(self, input, z):
-         x = input
-         x, trans, trans_feat = self.feat(x)
-         phi_weights = self.hyper_phi(z)
-         phi = lambda i: self.phi(i, params=phi_weights)
-         x = phi(x)
+    def forward(self, input, z):
+        x = input
+        x, trans, trans_feat = self.feat(x)
+        phi_weights = self.hyper_phi(z)
+        phi = lambda i: self.phi(i, params=phi_weights)
+        x = phi(x)
             
-         return F.log_softmax(x, dim=1), trans, trans_feat
+        return F.log_softmax(x, dim=1), trans, trans_feat
         
 class PointnetHyper(MetaModule):
     def __init__(self,
