@@ -127,7 +127,7 @@ for epoch in range(opt.nepoch):
         correct = pred_choice.eq(target.data).cpu().sum()
         total_correct = total_correct + correct.item()
         if i%100 == 0:
-            print('[%d: %d/%d] train loss: %f accuracy: %f' % (epoch, i, num_batch, loss.item(), correct.item() / float(100)))
+            print('[%d: %d/%d] train loss: %f accuracy: %f' % (epoch, i, num_batch, loss.item(), total_correct / (100* opt.batchSize)))
             total_correct = 0
     scheduler.step()
         # if i % 10 == 0:
