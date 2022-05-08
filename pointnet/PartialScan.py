@@ -7,7 +7,6 @@ Created on Sat May  7 16:51:20 2022
 import pickle
 import os
 import pandas as pd
-from torchvision.io import read_image
 import torch.utils.data as data
 import os
 import os.path
@@ -39,16 +38,18 @@ class PartialScans(data.Dataset):
     def __init__(self, latentcode_dir, shapes_dir):
         self.latent_code = unpickle(latentcode_dir)
         self.shapes_dir = shapes_dir
-        self.labels = self.latent_code.keys()
+        self.labels = list(self.latent_code.keys())
 
     def __len__(self):
         return len(self.labels)
 
     def __getitem__(self, idx):
-        i = random.randint(0,3)
-        j = random.randint(0,8)
-        shapes_path = os.path.join(self.shapes_dir, self.labels[idx]+"\pointcloud"+str(j)+str(i)+"_partial.npz")
-        shape = np.load(shapes_path)['points_r']
+        i = random.randint(0,2)
+        j = random.randint(0,7)
+        # shapes_path = os.path.join(self.shapes_dir, self.labels[idx]+"/pointcloud"+str(j)+str(i)+"_partial.npz")
+        shapes_path = os.path.join(self.shapes_dir, self.labels[idx]+"/pointcloud.npz")
+        # shape = np.load(shapes_path)['points_r']
+        shape = np.load(shapes_path)['points']
         label = self.labels[idx]
         latent_code = self.latent_code[label]
         return shape,label

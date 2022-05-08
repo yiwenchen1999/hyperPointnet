@@ -7,20 +7,22 @@ Created on Sat May  7 17:36:23 2022
 from __future__ import print_function
 import argparse
 import os
+import numpy as np
 import random
 import torch
 import torch.nn.parallel
 import torch.optim as optim
 import torch.utils.data
-from PartialScan import PartialScans
+from PartialScan import PartialScans,unpickle
 from model import feature_transform_regularizer
 from pointnetCls import PointNetCls
 import torch.nn.functional as F
 from tqdm import tqdm
+import random
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    '--batchSize', type=int, default=32, help='input batch size')
+    '--batchSize', type=int, default=3, help='input batch size')
 parser.add_argument(
     '--num_points', type=int, default=2500, help='input batch size')
 parser.add_argument(
@@ -42,9 +44,10 @@ print("Random Seed: ", opt.manualSeed)
 random.seed(opt.manualSeed)
 torch.manual_seed(opt.manualSeed)
 
-latent_code = r"E:\Code\IVL\shapeSearch\HyperPointnet\pointnet\03001627\embed_feats.pickle"
-latent_code_test = r"E:\Code\IVL\shapeSearch\HyperPointnet\pointnet\03001627\embed_feats_test.pickle"
-shape_folder = r"D:\data\dataset_small_partial\03001627"
+latent_code = "/gpfs/data/ssrinath/ychen485/hyperPointnet/pointnet/03001627/embed_feats.pickle"
+latent_code_test = "/gpfs/data/ssrinath/ychen485/hyperPointnet/pointnet/03001627/embed_feats_test.pickle"
+shape_folder = "/gpfs/data/ssrinath/ychen485/partialPointCloud/03001627"
+latent_dim = 384
 
 dataset = PartialScans(latentcode_dir = latent_code, shapes_dir = shape_folder)
 
@@ -62,6 +65,11 @@ testdataloader = torch.utils.data.DataLoader(
         shuffle=True,
         num_workers=int(opt.workers))
 
+latent_dict = unpickle(latent_code)
+keylist = list(latent_dict.keys())
+latent_dict_test = unpickle(latent_code_test)
+keylist_test = list(latent_dict_test.keys())
+
 print("train set lenth: "+ str(len(dataset)) +", test set length: "+ str(len(test_dataset)))
 try:
     os.makedirs(opt.outf)
@@ -72,29 +80,62 @@ classifier = PointNetCls(k=2, feature_transform=opt.feature_transform)
 
 optimizer = optim.Adam(classifier.parameters(), lr=0.001, betas=(0.9, 0.999))
 scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.5)
-# classifier.cuda()
+classifier.cuda()
 
 num_batch = len(dataset) / opt.batchSize
 
 for epoch in range(opt.nepoch):
-    # scheduler.step()
+    scheduler.step()
     for i, data in enumerate(dataloader, 0):
-        points, target = data
-        print(points)
+        points_o, label = data
+        points = points_o[:,0:1024,:].to(torch.float32)
+        points.to(torch.float32)
+        # print(points.dtype)
         # target = target[:, 0]
-        # points = points.transpose(2, 1)
-        # points, target = points.cuda(), target.cuda()
-        # optimizer.zero_grad()
-        # classifier = classifier.train()
-        # pred, trans, trans_feat = classifier(points)
-        # loss = F.nll_loss(pred, target)
-        # if opt.feature_transform:
-        #     loss += feature_transform_regularizer(trans_feat) * 0.001
-        # loss.backward()
-        # optimizer.step()
-        # pred_choice = pred.data.max(1)[1]
-        # correct = pred_choice.eq(target.data).cpu().sum()
-        # print('[%d: %d/%d] train loss: %f accuracy: %f' % (epoch, i, num_batch, loss.item(), correct.item() / float(opt.batchSize)))
+        # print(points.shape)
+        points = points.transpose(2, 1)
+        #print(points.shape)
+        # target = np.random.randint(0,1 ,(32,1))
+        target_np = np.zeros((len(label),))
+        t_idx = random.randint(0,len(label)-1)
+        target_np[t_idx] = 1
+        target = torch.from_numpy(target_np).to(torch.int64)
+        # target = target[:, 0]
+        # print(target.shape)
+        # print(target)
+        latents = np.zeros((1, latent_dim))
+        print(t_idx)
+        # print(label[t_idx])
+        # print(latent_dict[label[t_idx]])
+        latents[0] = latent_dict[label[t_idx]]
+        # for j in range(opt.batchSize):
+        #     if target[j] == 1:
+        #         latents[j] = latent_dict[label[j]]
+        #     else:
+        #         idx = random.randint(0,len(keylist))
+        #          name = keylist[idx]
+        #        while(name == label[j]):
+        #             idx = random.randint(0,len(keylist))
+        #            name = keylist[idx]
+        #         latents[j] = latent_dict[name]
+        z  = torch.from_numpy(latents).to(torch.float32)
+        # print(label[1], target[1])
+        # print(z[1])
+        # print(z.dtype)
+        points, target, z = points.cuda(), target.cuda(), z.cuda()
+        optimizer.zero_grad()
+        classifier = classifier.train()
+        pred, trans, trans_feat = classifier(points, z)
+        # print(pred.shape)
+        pred = pred[0]
+        loss = F.nll_loss(pred, target)
+        if opt.feature_transform:
+            loss += feature_transform_regularizer(trans_feat) * 0.001
+        loss.backward()
+        optimizer.step()
+        pred_choice = pred.data.max(1)[1]
+        correct = pred_choice.eq(target.data).cpu().sum()
+        print('[%d: %d/%d] train loss: %f accuracy: %f' % (epoch, i, num_batch, loss.item(), correct.item() / float(opt.batchSize)))
 
         # if i % 10 == 0:
         #     j, data = next(enumerate(testdataloader, 0))
