@@ -130,17 +130,31 @@ for epoch in range(opt.nepoch):
             print('[%d: %d/%d] train loss: %f accuracy: %f' % (epoch, i, num_batch, loss.item(), total_correct / (100* opt.batchSize)))
             total_correct = 0
     scheduler.step()
-        # if i % 10 == 0:
-        #     j, data = next(enumerate(testdataloader, 0))
-        #     points, target = data
-        #     target = target[:, 0]
-        #     points = points.transpose(2, 1)
-        #     points, target = points.cuda(), target.cuda()
-        #     classifier = classifier.eval()
-        #     pred, _, _ = classifier(points)
-        #     loss = F.nll_loss(pred, target)
-        #     pred_choice = pred.data.max(1)[1]
-        #     correct = pred_choice.eq(target.data).cpu().sum()
-        #     print('[%d: %d/%d] %s loss: %f accuracy: %f' % (epoch, i, num_batch, blue('test'), loss.item(), correct.item()/float(opt.batchSize)))
-    
-    torch.save(classifier.state_dict(), '%s/cls_model_%d.pth' % (opt.outf, epoch))
+    test_correct = 0
+    for j, data in enumerate(testdataloader, 0):
+        points_o, label = data
+        points = points_o[:,0:1024,:].to(torch.float32)
+        points.to(torch.float32)
+        points = points.transpose(2, 1)
+        target_np = np.zeros((len(label),))
+        t_idx = random.randint(0,len(label)-1)
+        target_np[t_idx] = 1
+        target = torch.from_numpy(target_np).to(torch.int64)
+        latents = np.zeros((1, latent_dim))
+        latents[0] = latent_dict[label[t_idx]]
+        z  = torch.from_numpy(latents).to(torch.float32)
+        points, target, z = points.cuda(), target.cuda(), z.cuda()
+        optimizer.zero_grad()
+        classifier = classifier.train()
+        pred, trans, trans_feat = classifier(points, z)
+        # print(pred.shape)
+        pred = pred[0]
+        
+        pred_choice = pred.data.max(1)[1]
+        correct = pred_choice.eq(target.data).cpu().sum()
+        test_correct = test_correct + correct.item()
+    print('[%d: %d/%d] %s loss: %f accuracy: %f' % (epoch, i, num_batch,
+                                                        blue('test'), loss.item(), test_correct/float(len(test_dataset))))
+
+    torch.save(classifier.state_dict(), '%s/cls_model_%d.pth' %
+               (opt.outf, epoch))
