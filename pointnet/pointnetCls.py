@@ -67,3 +67,11 @@ if __name__ == '__main__':
     cls = PointNetCls(k = 2)
     out, _, _ = cls(sim_data,z)
     print('class', out.size())
+    out = out[0]
+    # each element in target has to have 0 <= value < C
+    target = np.zeros((32,))
+    target = torch.from_numpy(target).to(torch.int64)
+    print(out.shape)
+    print(target.shape)
+    output = F.nll_loss(out, target)
+    # print(output.shape)

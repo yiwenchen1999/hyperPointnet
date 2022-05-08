@@ -31,7 +31,7 @@ parser.add_argument(
     '--nepoch', type=int, default=250, help='number of epochs to train for')
 parser.add_argument('--outf', type=str, default='cls', help='output folder')
 parser.add_argument('--model', type=str, default='', help='model path')
-parser.add_argument('--dataset_type', type=str, default='Shapenet_partial', help="dataset type shapenet|modelnet40")
+parser.add_argument('--checkpoint', type=str, default=' ', help="checkpoint dir")
 parser.add_argument('--feature_transform', action='store_true', help="use feature transform")
 
 opt = parser.parse_args()
@@ -78,35 +78,28 @@ except OSError:
 
 classifier = PointNetCls(k=2, feature_transform=opt.feature_transform)
 
+if opt.checkpoint != " ":
+    checkpoint = torch.load(opt.checkpoint)
+    classifier.load_state_dict(checkpoint)
+
 optimizer = optim.Adam(classifier.parameters(), lr=0.001, betas=(0.9, 0.999))
 scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.5)
 classifier.cuda()
 
 num_batch = len(dataset) / opt.batchSize
-
+total_correct = 0
 for epoch in range(opt.nepoch):
-    scheduler.step()
+    
     for i, data in enumerate(dataloader, 0):
         points_o, label = data
         points = points_o[:,0:1024,:].to(torch.float32)
         points.to(torch.float32)
-        # print(points.dtype)
-        # target = target[:, 0]
-        # print(points.shape)
         points = points.transpose(2, 1)
-        #print(points.shape)
-        # target = np.random.randint(0,1 ,(32,1))
         target_np = np.zeros((len(label),))
         t_idx = random.randint(0,len(label)-1)
         target_np[t_idx] = 1
         target = torch.from_numpy(target_np).to(torch.int64)
-        # target = target[:, 0]
-        # print(target.shape)
-        # print(target)
         latents = np.zeros((1, latent_dim))
-        print(t_idx)
-        # print(label[t_idx])
-        # print(latent_dict[label[t_idx]])
         latents[0] = latent_dict[label[t_idx]]
         # for j in range(opt.batchSize):
         #     if target[j] == 1:
@@ -119,9 +112,6 @@ for epoch in range(opt.nepoch):
         #            name = keylist[idx]
         #         latents[j] = latent_dict[name]
         z  = torch.from_numpy(latents).to(torch.float32)
-        # print(label[1], target[1])
-        # print(z[1])
-        # print(z.dtype)
         points, target, z = points.cuda(), target.cuda(), z.cuda()
         optimizer.zero_grad()
         classifier = classifier.train()
@@ -135,8 +125,11 @@ for epoch in range(opt.nepoch):
         optimizer.step()
         pred_choice = pred.data.max(1)[1]
         correct = pred_choice.eq(target.data).cpu().sum()
-        print('[%d: %d/%d] train loss: %f accuracy: %f' % (epoch, i, num_batch, loss.item(), correct.item() / float(opt.batchSize)))
-
+        total_correct = total_correct + correct.item()
+        if i%100 == 0:
+            print('[%d: %d/%d] train loss: %f accuracy: %f' % (epoch, i, num_batch, loss.item(), correct.item() / float(100)))
+            total_correct = 0
+    scheduler.step()
         # if i % 10 == 0:
         #     j, data = next(enumerate(testdataloader, 0))
         #     points, target = data
@@ -149,5 +142,5 @@ for epoch in range(opt.nepoch):
         #     pred_choice = pred.data.max(1)[1]
         #     correct = pred_choice.eq(target.data).cpu().sum()
         #     print('[%d: %d/%d] %s loss: %f accuracy: %f' % (epoch, i, num_batch, blue('test'), loss.item(), correct.item()/float(opt.batchSize)))
-
-    # torch.save(classifier.state_dict(), '%s/cls_model_%d.pth' % (opt.outf, epoch))
+    
+    torch.save(classifier.state_dict(), '%s/cls_model_%d.pth' % (opt.outf, epoch))
