@@ -47,9 +47,13 @@ class PartialScans(data.Dataset):
         i = random.randint(0,2)
         j = random.randint(0,7)
         # print(self.labels[idx])
-        shapes_path = os.path.join(self.shapes_dir, self.labels[idx]+"/pointcloud"+str(j)+str(i)+"_partial.npz")
-        # shapes_path = os.path.join(self.shapes_dir, self.labels[idx]+"/pointcloud.npz")
-        shape = np.load(shapes_path)['points_r']
+        for m in range(8):
+            # with Pool(5) as p:
+            #     p.map(save_partial,[0,1,2])
+            for n in range(3):
+                shapes_path = os.path.join(self.shapes_dir, self.labels[idx]+"/pointcloud"+str(j)+str(i)+"_partial.npz")
+                # shapes_path = os.path.join(self.shapes_dir, self.labels[idx]+"/pointcloud.npz")
+                shape = np.load(shapes_path)['points_r']
         # shape = np.load(shapes_path)['points']
         label = self.labels[idx]
         latent_code = self.latent_code[label]
