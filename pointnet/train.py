@@ -141,10 +141,10 @@ for epoch in range(opt.nepoch):
         target_np[t_idx] = 1
         target = torch.from_numpy(target_np).to(torch.int64)
         latents = np.zeros((1, latent_dim))
-        latents[0] = latent_dict[label[t_idx]]
+        latents[0] = latent_dict_test[label[t_idx]]
         z  = torch.from_numpy(latents).to(torch.float32)
         points, target, z = points.cuda(), target.cuda(), z.cuda()
-        optimizer.zero_grad()
+        # optimizer.zero_grad()
         classifier = classifier.train()
         pred, trans, trans_feat = classifier(points, z)
         # print(pred.shape)

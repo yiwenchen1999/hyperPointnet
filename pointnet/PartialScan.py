@@ -46,13 +46,14 @@ class PartialScans(data.Dataset):
     def __getitem__(self, idx):
         i = random.randint(0,2)
         j = random.randint(0,7)
-        # shapes_path = os.path.join(self.shapes_dir, self.labels[idx]+"/pointcloud"+str(j)+str(i)+"_partial.npz")
-        shapes_path = os.path.join(self.shapes_dir, self.labels[idx]+"/pointcloud.npz")
-        # shape = np.load(shapes_path)['points_r']
-        shape = np.load(shapes_path)['points']
+        # print(self.labels[idx])
+        shapes_path = os.path.join(self.shapes_dir, self.labels[idx]+"/pointcloud"+str(j)+str(i)+"_partial.npz")
+        # shapes_path = os.path.join(self.shapes_dir, self.labels[idx]+"/pointcloud.npz")
+        shape = np.load(shapes_path)['points_r']
+        # shape = np.load(shapes_path)['points']
         label = self.labels[idx]
         latent_code = self.latent_code[label]
-        return shape,label
+        return shape[0:1024,:],label
     
 # unpickled_file = unpickle(r"E:\Code\IVL\shapeSearch\HyperPointnet\pointnet\03001627\embed_feats.pickle")
 # print(unpickled_file.keys())
