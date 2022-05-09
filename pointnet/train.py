@@ -44,10 +44,10 @@ print("Random Seed: ", opt.manualSeed)
 random.seed(opt.manualSeed)
 torch.manual_seed(opt.manualSeed)
 
-latent_code = "/gpfs/data/ssrinath/ychen485/hyperPointnet/pointnet/03001627/embed_feats.pickle"
-latent_code_test = "/gpfs/data/ssrinath/ychen485/hyperPointnet/pointnet/03001627/embed_feats_test.pickle"
+latent_code = "/gpfs/data/ssrinath/ychen485/hyperPointnet/pointnet/03001627/ocnet_shapefeature_pc/embed_feats_trian.pickle"
+latent_code_test = "/gpfs/data/ssrinath/ychen485/hyperPointnet/pointnet/03001627/ocnet_shapefeature_pc/embed_feats_test.pickle"
 shape_folder = "/gpfs/data/ssrinath/ychen485/partialPointCloud/03001627"
-latent_dim = 384
+latent_dim = 512
 
 dataset = PartialScans(latentcode_dir = latent_code, shapes_dir = shape_folder)
 
