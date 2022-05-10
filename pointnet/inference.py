@@ -44,7 +44,7 @@ print("Random Seed: ", opt.manualSeed)
 random.seed(opt.manualSeed)
 torch.manual_seed(opt.manualSeed)
 
-latent_code = "/gpfs/data/ssrinath/ychen485/hyperPointnet/pointnet/03001627/ocnet_shapefeature_pc/embed_feats_trian.pickle"
+latent_code = "/gpfs/data/ssrinath/ychen485/hyperPointnet/pointnet/03001627/ocnet_shapefeature_pc/embed_feats_train.pickle"
 latent_code_test = "/gpfs/data/ssrinath/ychen485/hyperPointnet/pointnet/03001627/ocnet_shapefeature_pc/embed_feats_test.pickle"
 latent_code_val = "/gpfs/data/ssrinath/ychen485/hyperPointnet/pointnet/03001627/ocnet_shapefeature_pc/embed_feats_val.pickle"
 shape_folder = "/gpfs/data/ssrinath/ychen485/partialPointCloud/03001627"
@@ -78,6 +78,8 @@ latent_dict = unpickle(latent_code)
 keylist = list(latent_dict.keys())
 latent_dict_test = unpickle(latent_code_test)
 keylist_test = list(latent_dict_test.keys())
+latent_dict_val = unpickle(latent_code_val)
+keylist_val = list(latent_dict_val.keys())
 
 print("train set lenth: "+ str(len(dataset)) +", test set length: "+ str(len(test_dataset)))
 try:
@@ -107,7 +109,7 @@ for epoch in range(opt.nepoch):
         target_np[t_idx] = 1
         target = torch.from_numpy(target_np).to(torch.int64)
         latents = np.zeros((1, latent_dim))
-        latents[0] = latent_dict[label[t_idx]]
+        latents[0] = latent_dict_val[label[t_idx]]
         # for j in range(opt.batchSize):
         #     if target[j] == 1:
         #         latents[j] = latent_dict[label[j]]
