@@ -46,7 +46,7 @@ class PartialScans(data.Dataset):
     def __getitem__(self, idx):
         i = random.randint(0,2)
         j = random.randint(0,7)
-        print(self.labels[idx])
+        # print(self.labels[idx])
         # for j in range(8):
             # with Pool(5) as p:
             #     p.map(save_partial,[0,1,2])

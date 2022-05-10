@@ -22,7 +22,7 @@ from collections import OrderedDict
 class PointNetCls(nn.Module):
     def __init__(self, k=2, feature_transform=False):
         super(PointNetCls, self).__init__()
-        self.latent_dim = 384
+        self.latent_dim = 512
         self.feature_transform = feature_transform
         self.feat = model.PointNetfeat(global_feat=True, feature_transform=feature_transform)
         self.phi = PointnetHyper(outputDim = k)
